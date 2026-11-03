@@ -58,7 +58,10 @@ flowchart TD
 
 ## 👥 Default Test Users
 
-For immediate testing, default users are automatically initialized via [`DataInitializer.java`](file:///c:/github/ecomm-auth-service/src/main/java/com/ecomm/auth/config/DataInitializer.java) and Flyway migration [`V3__seed_default_users.sql`](file:///c:/github/ecomm-auth-service/src/main/resources/db/migration/V3__seed_default_users.sql):
+> [!WARNING]
+> These credentials are for **local development and demonstration testing only**. In a production deployment, ensure test seeds are removed or disabled and real secrets are injected via your cloud secret manager.
+
+Default users are automatically initialized via `DataInitializer.java` and Flyway migration `V3__seed_default_users.sql`:
 
 | Role | Email | Password | Assigned Authorities |
 |---|---|---|---|
