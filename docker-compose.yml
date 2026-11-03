@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: docker.io/library/mysql:8.0
+    container_name: ecomm-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: ecomm_auth
+      MYSQL_USER: auth_user
+      MYSQL_PASSWORD: auth_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecomm-network
+
+  redis:
+    image: docker.io/library/redis:7.2-alpine
+    container_name: ecomm-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecomm-network
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ecomm-auth-service
+    restart: on-failure
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ecomm_auth
+      DB_USER: auth_user
+      DB_PASSWORD: auth_password
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SECURITY_JWT_ACCESS_TOKEN_EXPIRATION_MINUTES: 15
+      SECURITY_JWT_REFRESH_TOKEN_EXPIRATION_DAYS: 7
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ecomm-network
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  ecomm-network:
+    driver: bridge
+
