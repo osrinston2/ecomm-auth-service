@@ -4,6 +4,7 @@ import com.ecomm.auth.dto.request.*;
 import com.ecomm.auth.dto.response.ApiResponse;
 import com.ecomm.auth.dto.response.AuthResponse;
 import com.ecomm.auth.dto.response.TokenRefreshResponse;
+import com.ecomm.auth.dto.response.UserSummaryResponse;
 import com.ecomm.auth.security.UserPrincipal;
 import com.ecomm.auth.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +22,12 @@ public class AuthController {
 
     public AuthController(AuthService authService) {
         this.authService = authService;
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserSummaryResponse>> getCurrentUser(@AuthenticationPrincipal UserPrincipal principal) {
+        UserSummaryResponse response = authService.getCurrentUser(principal);
+        return ResponseEntity.ok(ApiResponse.ok("Current user identity retrieved", response));
     }
 
     @PostMapping("/register")

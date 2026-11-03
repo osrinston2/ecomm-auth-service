@@ -81,9 +81,9 @@ curl -X POST http://localhost:8081/api/v1/auth/login \
   }'
 ```
 
-**2. Access Protected Profile using the returned Access Token:**
+**2. Access Authenticated Identity claims using the returned Access Token:**
 ```bash
-curl -X GET http://localhost:8081/api/v1/users/me \
+curl -X GET http://localhost:8081/api/v1/auth/me \
   -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>"
 ```
 
@@ -106,10 +106,9 @@ curl -X GET http://localhost:8081/api/v1/users/me \
 ### Protected Endpoints (Bearer JWT Required)
 | Method | Endpoint | Authorization | Description |
 |---|---|---|---|
+| `GET` | `/api/v1/auth/me` | Authenticated | Get authenticated user identity & roles |
 | `POST` | `/api/v1/auth/logout` | Authenticated | Revoke refresh token and blacklist access token |
 | `POST` | `/api/v1/auth/change-password` | Authenticated | Change password & invalidate all user sessions |
-| `GET` | `/api/v1/users/me` | Authenticated | Get current authenticated user profile |
-| `GET` | `/api/v1/users/{uuid}` | `ROLE_ADMIN` or Self | Get user profile by UUID |
 
 ---
 

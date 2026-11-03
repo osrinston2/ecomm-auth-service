@@ -151,4 +151,26 @@ class AuthControllerTest {
             .andExpect(jsonPath("$.keys[0].alg").value("RS256"))
             .andExpect(jsonPath("$.keys[0].kid").value("ecomm-auth-key-1"));
     }
+
+    @Test
+    @DisplayName("GET /api/v1/auth/me should return current user identity")
+    void shouldReturnCurrentUserIdentity() throws Exception {
+        UserSummaryResponse summary = new UserSummaryResponse(
+            "uuid-999",
+            "buyer@ecomm.com",
+            "Alice",
+            "Smith",
+            Set.of("ROLE_CUSTOMER"),
+            UserStatus.ACTIVE,
+            true
+        );
+
+        when(authService.getCurrentUser(any())).thenReturn(summary);
+
+        mockMvc.perform(get("/api/v1/auth/me"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.success").value(true))
+            .andExpect(jsonPath("$.data.email").value("buyer@ecomm.com"))
+            .andExpect(jsonPath("$.data.roles[0]").value("ROLE_CUSTOMER"));
+    }
 }

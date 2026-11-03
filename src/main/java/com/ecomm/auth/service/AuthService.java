@@ -230,6 +230,13 @@ public class AuthService {
         auditLogRepository.save(new AuditLog(user.getId(), "PASSWORD_RESET_SUCCESS", null, null, "Password reset completed"));
     }
 
+    @Transactional(readOnly = true)
+    public UserSummaryResponse getCurrentUser(UserPrincipal principal) {
+        User user = userRepository.findById(principal.getId())
+            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return mapToSummary(user);
+    }
+
     public UserSummaryResponse mapToSummary(User user) {
         Set<String> roles = user.getRoles().stream()
             .map(role -> role.getName().name())
