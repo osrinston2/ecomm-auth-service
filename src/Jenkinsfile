@@ -1,0 +1,34 @@
+
+pipeline {
+    agent any
+
+    tools {
+        jdk 'jdk-18'
+    }
+
+    stages {
+
+        stage('Verify Java') {
+            steps {
+                echo 'Checking Java version...'
+                bat 'java -version'
+                bat 'echo JAVA_HOME=%JAVA_HOME%'
+            }
+        }
+
+        stage('Build Application') {
+            steps {
+                echo 'Building Spring Boot application...'
+                bat '.\\mvnw.cmd -B clean package'
+            }
+        }
+
+        stage('Build Result') {
+            steps {
+                echo 'Build completed successfully!'
+                archiveArtifacts artifacts: 'target/*.jar',
+                                 fingerprint: true
+            }
+        }
+    }
+}
