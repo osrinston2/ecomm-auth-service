@@ -18,8 +18,8 @@ pipeline {
         stage('Verify Podman') {
             steps {
                 echo 'Checking Podman availability...'
-                bat 'podman --version'
-                bat 'podman info'
+                bat '"C:\\Users\\rinst\\AppData\\Local\\Programs\\Podman\\podman.exe" --version'
+                bat '"C:\\Users\\rinst\\AppData\\Local\\Programs\\Podman\\podman.exe" info'
             }
         }
 
