@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -13,6 +12,13 @@ pipeline {
                 echo 'Checking Java version...'
                 bat 'java -version'
                 bat 'echo JAVA_HOME=%JAVA_HOME%'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                echo 'Running automated tests...'
+                bat '.\\mvnw.cmd -B test'
             }
         }
 
