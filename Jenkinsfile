@@ -38,6 +38,15 @@ pipeline {
             }
         }
 
+        
+        stage('Inspect Podman Configuration') {
+            steps {
+                bat 'type "C:\\Users\\rinst\\AppData\\Roaming\\containers\\podman-connections.json"'
+                bat 'icacls "C:\\Users\\rinst\\.local\\share\\containers\\podman\\machine\\machine"'
+            }
+        }
+
+
         // stage('Verify Podman') {
         //     steps {
         //         echo 'Checking Podman availability...'
