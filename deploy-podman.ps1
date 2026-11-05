@@ -83,11 +83,10 @@ Write-Host "Waiting for MySQL..." -ForegroundColor Yellow
 $MySqlReady = $false
 
 for ($i = 0; $i -lt 60; $i++) {
-    podman exec $MySqlContainer mysqladmin ping `
-        -h localhost `
-        -uroot `
-        -prootpassword `
-        --silent 2>$null | Out-Null
+
+    # Redirect native command output through cmd.exe
+    # to prevent PowerShell treating stderr warnings as terminating errors.
+    cmd.exe /c "podman exec -e MYSQL_PWD=rootpassword $MySqlContainer mysqladmin ping -h 127.0.0.1 -uroot --silent >NUL 2>&1"
 
     if ($LASTEXITCODE -eq 0) {
         $MySqlReady = $true
@@ -100,6 +99,9 @@ for ($i = 0; $i -lt 60; $i++) {
 if (-not $MySqlReady) {
     throw "MySQL did not become ready within 120 seconds."
 }
+
+Write-Host "MySQL is ready!" -ForegroundColor Green
+
 
 # 5. Create databases required by both services
 Write-Host "Provisioning application databases..." -ForegroundColor Yellow
