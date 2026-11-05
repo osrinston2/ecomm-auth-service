@@ -47,13 +47,17 @@ pipeline {
         }
 
 
-        // stage('Verify Podman') {
-        //     steps {
-        //         echo 'Checking Podman availability...'
-        //         bat '"C:\\Users\\rinst\\AppData\\Local\\Programs\\Podman\\podman.exe" --version'
-        //         bat '"C:\\Users\\rinst\\AppData\\Local\\Programs\\Podman\\podman.exe" info'
-        //     }
-        // }
+        
+        stage('Verify Podman Connection') {
+            steps {
+                bat '''
+                    set "APPDATA=C:\\Users\\rinst\\AppData\\Roaming"
+                    "C:\\Users\\rinst\\AppData\\Local\\Programs\\Podman\\podman.exe" system connection list
+                    "C:\\Users\\rinst\\AppData\\Local\\Programs\\Podman\\podman.exe" info
+                '''
+            }
+        }
+
 
 
         stage('Run Tests') {
