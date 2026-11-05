@@ -10,13 +10,12 @@ $MySqlContainer = "ecomm-mysql"
 $RedisContainer = "ecomm-redis"
 $ImageName = $env:IMAGE_NAME
 $ImageTag = $env:IMAGE_TAG
+$Image = "${ImageName}:${ImageTag}"
 
 if ([string]::IsNullOrWhiteSpace($ImageName) -or
     [string]::IsNullOrWhiteSpace($ImageTag)) {
-    throw "IMAGE_NAME or IMAGE_TAG was not provided by Jenkins."
+    throw "IMAGE_NAME or IMAGE_TAG environment variable is missing."
 }
-
-$Image = "${ImageName}:${ImageTag}"
 
 Write-Host "Deploying image: $Image" -ForegroundColor Cyan
 
@@ -143,7 +142,7 @@ podman run -d `
     -e DB_PASSWORD=rootpassword `
     -e REDIS_HOST=$RedisContainer `
     -e REDIS_PORT=6379 `
-    $AuthImage
+    $Image
 
 if ($LASTEXITCODE -ne 0) {
     throw "Failed to start Auth Service."
