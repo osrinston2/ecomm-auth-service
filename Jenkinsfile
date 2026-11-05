@@ -81,21 +81,7 @@ pipeline {
                 echo 'Checking Auth Service health...'
 
                 bat '''
-                    powershell.exe -NoProfile -Command ^
-                    "$url = 'http://localhost:8081/actuator/health'; ^
-                    for ($i = 0; $i -lt 30; $i++) { ^
-                        try { ^
-                            $response = Invoke-RestMethod -Uri $url -TimeoutSec 5; ^
-                            if ($response.status -eq 'UP') { ^
-                                Write-Host 'Auth Service is HEALTHY'; ^
-                                exit 0 ^
-                            } ^
-                        } catch { ^
-                            Write-Host 'Waiting for Auth Service...' ^
-                        }; ^
-                        Start-Sleep -Seconds 2 ^
-                    }; ^
-                    throw 'Auth Service health check failed'"
+                    powershell.exe -NoProfile -Command "$url = 'http://localhost:8081/actuator/health'; for ($i = 0; $i -lt 30; $i++) { try { $response = Invoke-RestMethod -Uri $url -TimeoutSec 5; if ($response.status -eq 'UP') { Write-Host 'Auth Service is HEALTHY'; exit 0 } } catch { Write-Host 'Waiting for Auth Service...' }; Start-Sleep -Seconds 2 }; throw 'Auth Service health check failed'"
                 '''
             }
         }
