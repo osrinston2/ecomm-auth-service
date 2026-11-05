@@ -15,6 +15,108 @@ pipeline {
             }
         }
 
+        
+        stage('Determine Image Metadata') {
+            steps {
+                script {
+                    // 1. Get repository URL from Git
+                    def remoteUrl = bat(
+                        script: '@git config --get remote.origin.url',
+                        returnStdout: true
+                    ).trim()
+
+                    // Extract repository name
+                    def repoName = remoteUrl
+                        .replace('\\', '/')
+                        .tokenize('/')
+                        .last()
+                        .replaceFirst(/\.git$/, '')
+
+                    // Normalize repository name for container image
+                    repoName = repoName
+                        .toLowerCase()
+                        .replaceAll(/[^a-z0-9]+/, '-')
+                        .replaceAll(/^-+|-+$/, '')
+
+                    // 2. Get Git branch name
+                    def branch = env.BRANCH_NAME ?: env.GIT_BRANCH
+
+                    if (!branch) {
+                        branch = bat(
+                            script: '@git rev-parse --abbrev-ref HEAD',
+                            returnStdout: true
+                        ).trim()
+                    }
+
+                    // Remove common Git prefixes
+                    branch = branch.replaceFirst(/^refs\/heads\//, '')
+                    branch = branch.replaceFirst(/^origin\//, '')
+
+                    // 3. Normalize branch name for image tag
+                    def tag = branch
+                        .toLowerCase()
+                        .replaceAll(/[^a-z0-9_.-]+/, '-')
+                        .replaceAll(/^[.-]+|[.-]+$/, '')
+
+                    if (!repoName || !tag) {
+                        error('Invalid repository name or branch name.')
+                    }
+
+                    tag = tag.take(128)
+
+                    // 4. Export metadata for subsequent stages
+                    env.REPO_NAME = repoName
+                    env.IMAGE_TAG = tag
+                    env.IMAGE_NAME = "localhost/${repoName}"
+
+                    echo "Repository: ${env.REPO_NAME}"
+                    echo "Branch: ${branch}"
+                    echo "Image: ${env.IMAGE_NAME}:${env.IMAGE_TAG}"
+                }
+            }
+        }
+
+
+        
+        stage('Determine Image Tag') {
+            steps {
+                script {
+                    // Support both Multibranch Pipeline and regular Pipeline jobs
+                    def branch = env.BRANCH_NAME ?: env.GIT_BRANCH
+
+                    if (!branch) {
+                        branch = bat(
+                            script: '@git rev-parse --abbrev-ref HEAD',
+                            returnStdout: true
+                        ).trim()
+                    }
+
+                    // Remove common Git remote prefixes
+                    branch = branch.replaceFirst(/^refs\/heads\//, '')
+                    branch = branch.replaceFirst(/^origin\//, '')
+
+                    // Convert branch name into a valid Podman image tag
+                    def tag = branch
+                        .toLowerCase()
+                        .replaceAll(/[^a-z0-9_.-]+/, '-')
+                        .replaceAll(/^[.-]+|[.-]+$/, '')
+
+                    if (!tag) {
+                        error('Unable to generate a valid image tag from branch name.')
+                    }
+
+                    // Docker/Podman tags have a maximum length of 128 characters
+                    tag = tag.take(128)
+
+                    env.IMAGE_TAG = tag
+
+                    echo "Git branch: ${branch}"
+                    echo "Podman image tag: ${env.IMAGE_TAG}"
+                }
+            }
+        }
+
+
         stage('Verify Podman Connection') {
             steps {
                 bat '''
@@ -46,15 +148,15 @@ pipeline {
                                  fingerprint: true
             }
         }
-
+        
         stage('Build Container Image') {
             steps {
-                echo 'Building Auth Service container image...'
+                echo "Building ${env.IMAGE_NAME}:${env.IMAGE_TAG}..."
 
                 bat '''
                     set "APPDATA=C:\\Users\\rinst\\AppData\\Roaming"
 
-                    "C:\\Users\\rinst\\AppData\\Local\\Programs\\Podman\\podman.exe" build -t ecomm-auth-service:local .
+                    "C:\\Users\\rinst\\AppData\\Local\\Programs\\Podman\\podman.exe" build -t %IMAGE_NAME%:%IMAGE_TAG% .
                 '''
             }
         }

@@ -8,7 +8,17 @@ $Network = "ecomm-network"
 $AuthContainer = "ecomm-auth-service"
 $MySqlContainer = "ecomm-mysql"
 $RedisContainer = "ecomm-redis"
-$AuthImage = "localhost/ecomm-auth-service:local"
+$ImageName = $env:IMAGE_NAME
+$ImageTag = $env:IMAGE_TAG
+
+if ([string]::IsNullOrWhiteSpace($ImageName) -or
+    [string]::IsNullOrWhiteSpace($ImageTag)) {
+    throw "IMAGE_NAME or IMAGE_TAG was not provided by Jenkins."
+}
+
+$Image = "${ImageName}:${ImageTag}"
+
+Write-Host "Deploying image: $Image" -ForegroundColor Cyan
 
 Write-Host "=== Deploying E-Commerce Auth Service ===" -ForegroundColor Cyan
 
