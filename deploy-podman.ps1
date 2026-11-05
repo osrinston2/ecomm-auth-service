@@ -49,7 +49,6 @@ if ($LASTEXITCODE -ne 0) {
 else {
     Write-Host "MySQL container already exists. Starting it..." -ForegroundColor Yellow
     podman start $MySqlContainer 2>$null | Out-Null
-    podman network connect $Network $MySqlContainer 2>$null | Out-Null
 }
 
 # 3. Ensure Redis exists
