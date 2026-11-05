@@ -15,6 +15,15 @@ pipeline {
             }
         }
 
+        stage('Verify Podman') {
+            steps {
+                echo 'Checking Podman availability...'
+                bat 'podman --version'
+                bat 'podman info'
+            }
+        }
+
+
         stage('Run Tests') {
             steps {
                 echo 'Running automated tests...'
