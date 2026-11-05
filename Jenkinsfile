@@ -15,6 +15,15 @@ pipeline {
             }
         }
 
+        stage('Check Jenkins Environment') {
+            steps {
+                bat 'whoami'
+                bat 'echo USERPROFILE=%USERPROFILE%'
+                bat 'echo HOME=%HOME%'
+                bat 'podman system connection list'
+            }
+        }
+
         stage('Verify Podman') {
             steps {
                 echo 'Checking Podman availability...'
