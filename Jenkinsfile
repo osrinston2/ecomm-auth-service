@@ -50,13 +50,7 @@ pipeline {
         
         stage('Build Container Image') {
             steps {
-                echo "Building ${env.IMAGE_NAME}:${env.IMAGE_TAG}..."
-
-                bat '''
-                    set "APPDATA=C:\\Users\\rinst\\AppData\\Roaming"
-
-                    "C:\\Users\\rinst\\AppData\\Local\\Programs\\Podman\\podman.exe" build -t %IMAGE_NAME%:%IMAGE_TAG% .
-                '''
+                buildPodmanImage()
             }
         }
         
