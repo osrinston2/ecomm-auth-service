@@ -23,13 +23,20 @@ pipeline {
             }
         }
 
-        stage('Verify Podman') {
+        stage('Check Podman Files') {
             steps {
-                echo 'Checking Podman availability...'
-                bat '"C:\\Users\\rinst\\AppData\\Local\\Programs\\Podman\\podman.exe" --version'
-                bat '"C:\\Users\\rinst\\AppData\\Local\\Programs\\Podman\\podman.exe" info'
+                bat 'dir "C:\\Users\\rinst\\.local\\share\\containers\\podman\\machine"'
+                bat 'dir "C:\\Users\\rinst\\.ssh"'
             }
         }
+
+        // stage('Verify Podman') {
+        //     steps {
+        //         echo 'Checking Podman availability...'
+        //         bat '"C:\\Users\\rinst\\AppData\\Local\\Programs\\Podman\\podman.exe" --version'
+        //         bat '"C:\\Users\\rinst\\AppData\\Local\\Programs\\Podman\\podman.exe" info'
+        //     }
+        // }
 
 
         stage('Run Tests') {
