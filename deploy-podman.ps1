@@ -19,6 +19,14 @@ if ([string]::IsNullOrWhiteSpace($ImageName) -or
 
 Write-Host "Deploying image: $Image" -ForegroundColor Cyan
 
+Write-Host "Verifying image: $Image" -ForegroundColor Cyan
+
+podman image exists $Image
+
+if ($LASTEXITCODE -ne 0) {
+    throw "Image '$Image' does not exist. Build stage may have failed."
+}
+
 Write-Host "=== Deploying E-Commerce Auth Service ===" -ForegroundColor Cyan
 
 # 1. Ensure shared network exists
