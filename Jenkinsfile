@@ -81,5 +81,19 @@ pipeline {
                                  fingerprint: true
             }
         }
+
+        
+        stage('Build Container Image') {
+            steps {
+                echo 'Building Auth Service container image...'
+
+                bat '''
+                    set "APPDATA=C:\\Users\\rinst\\AppData\\Roaming"
+
+                    "C:\\Users\\rinst\\AppData\\Local\\Programs\\Podman\\podman.exe" build -t ecomm-auth-service:local .
+                '''
+            }
+        }
+
     }
 }
