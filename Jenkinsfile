@@ -20,16 +20,17 @@ pipeline {
                 bat 'whoami'
                 bat 'echo USERPROFILE=%USERPROFILE%'
                 bat 'echo HOME=%HOME%'
-                bat 'podman system connection list'
             }
         }
 
-        stage('Check Podman Files') {
+        stage('Verify Podman') {
             steps {
-                bat 'dir "C:\\Users\\rinst\\.local\\share\\containers\\podman\\machine"'
-                bat 'dir "C:\\Users\\rinst\\.ssh"'
+                echo 'Checking Podman availability...'
+                bat '"C:\\Users\\rinst\\AppData\\Local\\Programs\\Podman\\podman.exe" --version'
+                bat '"C:\\Users\\rinst\\AppData\\Local\\Programs\\Podman\\podman.exe" info'
             }
         }
+
 
         stage('Run Tests') {
             steps {
