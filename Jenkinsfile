@@ -15,39 +15,6 @@ pipeline {
             }
         }
 
-        stage('Check Jenkins Environment') {
-            steps {
-                bat 'whoami'
-                bat 'echo USERPROFILE=%USERPROFILE%'
-                bat 'echo HOME=%HOME%'
-            }
-        }
-
-        stage('Check Podman Files') {
-            steps {
-                bat 'dir "C:\\Users\\rinst\\.local\\share\\containers\\podman\\machine"'
-                bat 'dir "C:\\Users\\rinst\\.ssh"'
-            }
-        }
-
-        stage('Locate Podman Configuration') {
-            steps {
-                bat 'dir "C:\\Users\\rinst\\.config\\containers"'
-                bat 'dir "C:\\Users\\rinst\\AppData\\Roaming\\containers"'
-                bat 'dir "C:\\Users\\rinst\\.local\\share\\containers\\podman\\machine\\machine"'
-            }
-        }
-
-        
-        stage('Inspect Podman Configuration') {
-            steps {
-                bat 'type "C:\\Users\\rinst\\AppData\\Roaming\\containers\\podman-connections.json"'
-                bat 'icacls "C:\\Users\\rinst\\.local\\share\\containers\\podman\\machine\\machine"'
-            }
-        }
-
-
-        
         stage('Verify Podman Connection') {
             steps {
                 bat '''
@@ -57,8 +24,6 @@ pipeline {
                 '''
             }
         }
-
-
 
         stage('Run Tests') {
             steps {
@@ -82,7 +47,6 @@ pipeline {
             }
         }
 
-        
         stage('Build Container Image') {
             steps {
                 echo 'Building Auth Service container image...'
@@ -91,6 +55,47 @@ pipeline {
                     set "APPDATA=C:\\Users\\rinst\\AppData\\Roaming"
 
                     "C:\\Users\\rinst\\AppData\\Local\\Programs\\Podman\\podman.exe" build -t ecomm-auth-service:local .
+                '''
+            }
+        }
+        
+        stage('Deploy to Podman') {
+            steps {
+                echo 'Deploying Auth Service to Podman...'
+
+                bat '''
+                    set "APPDATA=C:\\Users\\rinst\\AppData\\Roaming"
+                    set "PATH=C:\\Users\\rinst\\AppData\\Local\\Programs\\Podman;%PATH%"
+
+                    powershell.exe -NoProfile -NonInteractive ^
+                        -ExecutionPolicy Bypass ^
+                        -File ".\\deploy-podman.ps1"
+
+                    if errorlevel 1 exit /b %ERRORLEVEL%
+                '''
+            }
+        }
+        
+        stage('Verify Deployment') {
+            steps {
+                echo 'Checking Auth Service health...'
+
+                bat '''
+                    powershell.exe -NoProfile -Command ^
+                    "$url = 'http://localhost:8081/actuator/health'; ^
+                    for ($i = 0; $i -lt 30; $i++) { ^
+                        try { ^
+                            $response = Invoke-RestMethod -Uri $url -TimeoutSec 5; ^
+                            if ($response.status -eq 'UP') { ^
+                                Write-Host 'Auth Service is HEALTHY'; ^
+                                exit 0 ^
+                            } ^
+                        } catch { ^
+                            Write-Host 'Waiting for Auth Service...' ^
+                        }; ^
+                        Start-Sleep -Seconds 2 ^
+                    }; ^
+                    throw 'Auth Service health check failed'"
                 '''
             }
         }

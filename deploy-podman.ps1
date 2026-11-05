@@ -1,47 +1,145 @@
-# deploy-podman.ps1 - Native Podman deployment without requiring docker-compose binary
-Write-Host "=== Deploying E-Commerce Auth Service to Podman ===" -ForegroundColor Cyan
 
-# 1. Stop existing pod if present
-podman pod stop ecomm-auth-pod 2>$null
-podman pod rm -f ecomm-auth-pod 2>$null
+# deploy-podman.ps1
+# Native Podman deployment for ecomm-auth-service
 
-# 2. Create Pod with exposed ports
-Write-Host "[1/4] Creating Podman Pod: ecomm-auth-pod..." -ForegroundColor Yellow
-podman pod create --name ecomm-auth-pod -p 8081:8081 -p 3306:3306 -p 6379:6379
+$ErrorActionPreference = "Stop"
 
-# 3. Start MySQL container inside the pod
-Write-Host "[2/4] Starting MySQL 8.0 container..." -ForegroundColor Yellow
-podman run -d --pod ecomm-auth-pod --name ecomm-mysql `
-    -e MYSQL_ROOT_PASSWORD=rootpassword `
-    -e MYSQL_DATABASE=ecomm_auth `
-    -e MYSQL_USER=auth_user `
-    -e MYSQL_PASSWORD=auth_password `
-    docker.io/library/mysql:8.0
+$Network = "ecomm-network"
+$AuthContainer = "ecomm-auth-service"
+$MySqlContainer = "ecomm-mysql"
+$RedisContainer = "ecomm-redis"
+$AuthImage = "localhost/ecomm-auth-service:local"
 
-# 4. Start Redis container inside the pod
-Write-Host "[3/4] Starting Redis 7.2 container..." -ForegroundColor Yellow
-podman run -d --pod ecomm-auth-pod --name ecomm-redis `
-    docker.io/library/redis:7.2-alpine
+Write-Host "=== Deploying E-Commerce Auth Service ===" -ForegroundColor Cyan
 
-# 5. Build and Start Auth Service
-Write-Host "[4/4] Building and starting Auth Service..." -ForegroundColor Yellow
-if (Test-Path "target\auth-service-1.0.0-SNAPSHOT.jar") {
-    podman build -f Dockerfile.fast -t ecomm-auth-service:latest .
-} else {
-    podman build -f Dockerfile -t ecomm-auth-service:latest .
+# 1. Ensure shared network exists
+podman network exists $Network
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Creating network: $Network" -ForegroundColor Yellow
+    podman network create $Network
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to create Podman network."
+    }
 }
 
-podman run -d --pod ecomm-auth-pod --name ecomm-auth-service `
-    -e DB_HOST=localhost `
+# 2. Ensure MySQL exists
+podman container exists $MySqlContainer
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Creating MySQL container..." -ForegroundColor Yellow
+
+    podman run -d `
+        --name $MySqlContainer `
+        --network $Network `
+        --network-alias $MySqlContainer `
+        --restart unless-stopped `
+        -p 3306:3306 `
+        -e MYSQL_ROOT_PASSWORD=rootpassword `
+        -e MYSQL_ROOT_HOST=% `
+        -e MYSQL_DATABASE=ecomm_auth_db `
+        -v ecomm-mysql-data:/var/lib/mysql `
+        docker.io/library/mysql:8.0
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to create MySQL container."
+    }
+}
+else {
+    Write-Host "MySQL container already exists. Starting it..." -ForegroundColor Yellow
+    podman start $MySqlContainer 2>$null | Out-Null
+    podman network connect $Network $MySqlContainer 2>$null | Out-Null
+}
+
+# 3. Ensure Redis exists
+podman container exists $RedisContainer
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Creating Redis container..." -ForegroundColor Yellow
+
+    podman run -d `
+        --name $RedisContainer `
+        --network $Network `
+        --network-alias $RedisContainer `
+        --restart unless-stopped `
+        -p 6379:6379 `
+        -v ecomm-redis-data:/data `
+        docker.io/library/redis:7.2-alpine
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to create Redis container."
+    }
+}
+else {
+    Write-Host "Redis container already exists. Starting it..." -ForegroundColor Yellow
+    podman start $RedisContainer 2>$null | Out-Null
+    podman network connect $Network $RedisContainer 2>$null | Out-Null
+}
+
+# 4. Wait for MySQL to become ready
+Write-Host "Waiting for MySQL..." -ForegroundColor Yellow
+
+$MySqlReady = $false
+
+for ($i = 0; $i -lt 60; $i++) {
+    podman exec $MySqlContainer mysqladmin ping `
+        -h localhost `
+        -uroot `
+        -prootpassword `
+        --silent 2>$null | Out-Null
+
+    if ($LASTEXITCODE -eq 0) {
+        $MySqlReady = $true
+        break
+    }
+
+    Start-Sleep -Seconds 2
+}
+
+if (-not $MySqlReady) {
+    throw "MySQL did not become ready within 120 seconds."
+}
+
+# 5. Create databases required by both services
+Write-Host "Provisioning application databases..." -ForegroundColor Yellow
+
+podman exec $MySqlContainer mysql `
+    -uroot `
+    -prootpassword `
+    -e "CREATE DATABASE IF NOT EXISTS ecomm_auth_db; CREATE DATABASE IF NOT EXISTS ecomm_user_db;"
+
+if ($LASTEXITCODE -ne 0) {
+    throw "Failed to provision application databases."
+}
+
+# 6. Replace existing auth service container
+podman rm -f $AuthContainer 2>$null | Out-Null
+
+# 7. Deploy auth service
+Write-Host "Starting Auth Service..." -ForegroundColor Yellow
+
+podman run -d `
+    --name $AuthContainer `
+    --network $Network `
+    --network-alias $AuthContainer `
+    --restart unless-stopped `
+    -p 8081:8081 `
+    -e SERVER_PORT=8081 `
+    -e DB_HOST=$MySqlContainer `
     -e DB_PORT=3306 `
-    -e DB_NAME=ecomm_auth `
-    -e DB_USER=auth_user `
-    -e DB_PASSWORD=auth_password `
-    -e REDIS_HOST=localhost `
+    -e DB_NAME=ecomm_auth_db `
+    -e DB_USER=root `
+    -e DB_PASSWORD=rootpassword `
+    -e REDIS_HOST=$RedisContainer `
     -e REDIS_PORT=6379 `
-    ecomm-auth-service:latest
+    $AuthImage
 
-Write-Host "`n=== Deployment Completed Successfully! ===" -ForegroundColor Green
-Write-Host "All containers are running in Podman Desktop under the 'ecomm-auth-pod' pod."
-Write-Host "Endpoint: http://localhost:8081/actuator/health"
+if ($LASTEXITCODE -ne 0) {
+    throw "Failed to start Auth Service."
+}
 
+Write-Host "`n=== Auth Service Deployment Completed ===" -ForegroundColor Green
+Write-Host "Auth Service: http://localhost:8081"
+Write-Host "Health:       http://localhost:8081/actuator/health"
+Write-Host "Network:      $Network"
