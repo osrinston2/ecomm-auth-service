@@ -30,6 +30,14 @@ pipeline {
             }
         }
 
+        stage('Locate Podman Configuration') {
+            steps {
+                bat 'dir "C:\\Users\\rinst\\.config\\containers"'
+                bat 'dir "C:\\Users\\rinst\\AppData\\Roaming\\containers"'
+                bat 'dir "C:\\Users\\rinst\\.local\\share\\containers\\podman\\machine\\machine"'
+            }
+        }
+
         // stage('Verify Podman') {
         //     steps {
         //         echo 'Checking Podman availability...'
