@@ -55,6 +55,10 @@ pipeline {
         }
         
         stage('Deploy to Podman') {
+            when {
+                branch 'main'
+            }
+            
             steps {
                 echo 'Deploying Auth Service to Podman...'
 
@@ -72,6 +76,10 @@ pipeline {
         }
         
         stage('Verify Deployment') {
+            when {
+                branch 'main'
+            }
+
             steps {
                 echo 'Checking Auth Service health...'
 
