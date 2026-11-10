@@ -89,6 +89,23 @@ curl -X GET http://localhost:8081/api/v1/auth/me \
 
 ---
 
+## 📖 Swagger / OpenAPI 3 Documentation
+
+Interactive OpenAPI 3 documentation and Swagger UI are integrated into the microservice:
+
+- **Swagger UI Interactive Console**: [http://localhost:8081/swagger-ui.html](http://localhost:8081/swagger-ui.html)
+- **OpenAPI 3 JSON Spec**: [http://localhost:8081/v3/api-docs](http://localhost:8081/v3/api-docs)
+
+### Testing Authenticated Endpoints via Swagger UI
+1. Open the **Swagger UI** in your browser.
+2. Call `POST /api/v1/auth/login` with your credentials (`customer@ecomm.com` / `Customer123!`).
+3. Copy the returned `accessToken`.
+4. Click the **Authorize 🔓** button in the top-right corner of Swagger UI.
+5. Paste your access token into the value field and click **Authorize**.
+6. All protected endpoints (such as `GET /api/v1/auth/me`, `POST /api/v1/auth/logout`, `POST /api/v1/auth/change-password`) can now be tested directly in the browser!
+
+---
+
 ## 📡 REST API Endpoints
 
 ### Public Endpoints
