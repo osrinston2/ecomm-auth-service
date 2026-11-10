@@ -4,7 +4,7 @@ Enterprise-grade authentication and authorization microservice designed for dist
 
 ---
 
-## Architecture Overview
+## Project Architecture Overview
 
 ```mermaid
 flowchart TD
