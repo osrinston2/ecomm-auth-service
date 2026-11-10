@@ -4,7 +4,7 @@ Enterprise-grade authentication and authorization microservice designed for dist
 
 ---
 
-## 🏛️ Architecture Overview
+## Architecture Overview
 
 ```mermaid
 flowchart TD
@@ -26,7 +26,7 @@ flowchart TD
 
 ---
 
-## 🔒 Security & Cryptographic Highlights
+## Security & Cryptographic Highlights
 
 1. **Asymmetric RS256 JWT Access Tokens**:
    - Short-lived (15 minutes default).
@@ -56,7 +56,7 @@ flowchart TD
 
 ---
 
-## 👥 Default Test Users
+## Default Test Users
 
 > [!WARNING]
 > These credentials are for **local development and demonstration testing only**. In a production deployment, ensure test seeds are removed or disabled and real secrets are injected via your cloud secret manager.
@@ -89,7 +89,7 @@ curl -X GET http://localhost:8081/api/v1/auth/me \
 
 ---
 
-## 📖 Swagger / OpenAPI 3 Documentation
+## Swagger / OpenAPI 3 Documentation
 
 Interactive OpenAPI 3 documentation and Swagger UI are integrated into the microservice:
 
@@ -106,7 +106,7 @@ Interactive OpenAPI 3 documentation and Swagger UI are integrated into the micro
 
 ---
 
-## 📡 REST API Endpoints
+## REST API Endpoints
 
 ### Public Endpoints
 | Method | Endpoint | Description |
@@ -129,7 +129,7 @@ Interactive OpenAPI 3 documentation and Swagger UI are integrated into the micro
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - **Java 18** (or newer JDK with Java 18 target)
@@ -157,7 +157,7 @@ java -jar target/auth-service-1.0.0-SNAPSHOT.jar
 
 ---
 
-## 🧪 Testing
+## Testing
 
 Execute unit and integration tests:
 ```bash
@@ -171,7 +171,7 @@ The test suite includes:
 
 ---
 
-## ⚙️ Environment Configuration
+## Environment Configuration
 
 | Variable | Default | Description |
 |---|---|---|
